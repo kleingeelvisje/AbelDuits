@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Abel's Deutsch Brawl</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:linear-gradient(135deg,#18213b,#283d78 55%,#14182d);color:#fff;min-height:100vh}
+.wrap{max-width:900px;margin:auto;padding:18px}
+.card{background:#202b4a;border:3px solid #5168a8;border-radius:24px;box-shadow:0 12px 30px #0008;padding:22px}
+h1{margin:0;font-size:clamp(30px,7vw,58px);text-align:center;text-shadow:4px 4px #111}
+.sub{text-align:center;color:#d8e1ff;margin:5px 0 18px}
+.stats{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:18px}
+.stat{background:#111a32;border-radius:14px;padding:9px 14px;font-weight:800}
+.badge{display:inline-block;background:#f2b705;color:#161616;border-radius:10px;padding:4px 8px}
+.modes{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:16px}
+button{border:0;border-radius:13px;padding:11px 15px;font-weight:800;cursor:pointer;background:#4c67c7;color:#fff;box-shadow:0 4px 0 #293a83}
+button:hover{filter:brightness(1.12)}
+button:active{transform:translateY(3px);box-shadow:0 1px 0 #293a83}
+button.active{background:#f2b705;color:#171717;box-shadow:0 4px 0 #a47700}
+.question{background:#121a31;border-radius:20px;padding:28px 18px;text-align:center;margin:12px 0}
+.label{font-size:14px;color:#9fb1ea;font-weight:800;text-transform:uppercase;letter-spacing:1px}
+.word{font-size:clamp(34px,9vw,64px);font-weight:900;margin:8px 0 20px}
+input{width:100%;max-width:600px;padding:16px;border-radius:14px;border:3px solid #6378b8;background:#fff;color:#111;font-size:21px;text-align:center;outline:none}
+input:focus{border-color:#f2b705}
+.actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:14px}
+#feedback{min-height:45px;text-align:center;font-size:22px;font-weight:900;padding-top:12px}
+.good{color:#63ef8b}.bad{color:#ff6d7a}
+.progress{height:12px;background:#10162a;border-radius:20px;overflow:hidden;margin:10px 0 18px}
+#bar{height:100%;width:0;background:#f2b705;transition:.25s}
+.small{font-size:13px;color:#aebbe5;text-align:center;margin-top:15px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="card">
+<h1>⚡ ABEL'S DEUTSCH BRAWL ⚡</h1>
+<div class="sub">Leer Duits • pak XP • houd je streak • word een Sprach-Brawler 😎</div>
+
+<div class="stats">
+<div class="stat">🏆 XP <span id="xp">0</span></div>
+<div class="stat">🔥 Streak <span id="streak">0</span></div>
+<div class="stat">💎 Goed <span id="score">0</span></div>
+<div class="stat">💥 Level <span id="level">1</span></div>
+</div>
+
+<div class="modes">
+<button class="mode active" data-mode="mix">🎯 Mix</button>
+<button class="mode" data-mode="de">🇩🇪 → 🇳🇱</button>
+<button class="mode" data-mode="nl">🇳🇱 → 🇩🇪</button>
+<button class="mode" data-mode="numbers">🔢 Getallen</button>
+</div>
+
+<div class="progress"><div id="bar"></div></div>
+
+<div class="question">
+<div class="label" id="direction">Duits → Nederlands</div>
+<div class="word" id="word">Warum</div>
+<input id="answer" autocomplete="off" placeholder="Typ je antwoord..." />
+<div class="actions">
+<button id="check">⚔️ Check!</button>
+<button id="skip">⏭️ Skip</button>
+</div>
+<div id="feedback"></div>
+</div>
+
+<div class="small">Tip: hoofdletters maken niet uit. Ook ß en ss worden slim herkend.</div>
+</div>
+</div>
+
+<script>
+const vocab = [
+["Warum","Waarom"],["Was","wat"],["Wer","wie"],["Wo","waar"],
+["Woher kommst du","Waar kom je vandaan"],["Wohin gehst du","Waar ga je naartoe"],
+["der Name","de naam"],["der Satz","de zin"],["die Sätze","de zinnen"],
+["die Grenze","de grens"],["die Hauptstadt","de hoofdstad"],["die Karte","de kaart"],
+["das Land","het land"],["die Länder","de landen"],["die Niederlande","Nederland"],
+["aber","maar"],["bedeuten","betekenen"],["beliebt","populair"],["benutzen","gebruiken"],
+["bunt","kleurrijk"],["Deutschland","Duitsland"],["fliegen","vliegen"],["hören","horen"],
+["in der Nähe","in de buurt"],["richtig","goed/juist"],["falsch","fout"],["schreiben","schrijven"],
+["und","en"],["wohnen","wonen"],["die Insel","het eiland"],["die Inseln","de eilanden"],
+["die Ferien","de vakantie"],["alt","oud"],["neu","nieuw"],["ankreuzen","aankruisen"],
+["arbeiten","werken"],["auch","ook"],["eigentlich","eigenlijk"],["es gibt","er is / er zijn"],
+["fahren","rijden/reizen"],["gehen","gaan"],["gucken","kijken"],["gut","goed"],
+["schlecht","slecht"],["heißen","heten"],["helfen","helpen"],["in Urlaub fahren","op vakantie gaan"],
+["jedes Jahr","elk jaar"],["kommen","komen"],["oder","of"],["schon","al"],
+["sehen","zien"],["der Freund","de vriend"],["die Antwort","het antwoord"],
+["die Aufgabe","de opdracht"],["die Frage","de vraag"],["die Freundin","de vriendin"],
+["das Zimmer","de kamer"],["die Nachrichten","het nieuws"],["antworten","antwoorden"],
+["fragen","vragen"],["ja","ja"],["nein","nee"],["klein","klein"],["groß","groot"],
+["langweilig","saai"],["lesen","lezen"],["lustig","grappig"],["nett","aardig"],
+["oft","vaak"],["spannend","spannend"],["sprechen","spreken"],["toll","geweldig"],
+["vergleichen","vergelijken"]
+];
+
+const nums = [
+["null","0"],["eins","1"],["zwei","2"],["drei","3"],["vier","4"],["fünf","5"],
+["sechs","6"],["sieben","7"],["acht","8"],["neun","9"],["zehn","10"],["elf","11"],
+["zwölf","12"],["dreizehn","13"],["vierzehn","14"],["fünfzehn","15"],["sechzehn","16"],
+["siebzehn","17"],["achtzehn","18"],["neunzehn","19"],["zwanzig","20"],["einundzwanzig","21"],
+["zweiundzwanzig","22"],["dreiundzwanzig","23"],["vierundzwanzig","24"],["fünfundzwanzig","25"],
+["sechsundzwanzig","26"],["siebenundzwanzig","27"],["achtundzwanzig","28"],["neunundzwanzig","29"],
+["dreißig","30"],["vierzig","40"],["fünfzig","50"],["sechzig","60"],["siebzig","70"],
+["achtzig","80"],["neunzig","90"],["einhundert","100"]
+];
+
+const goodLines = [
+"LET'S GOOO 🔥","BROOO, die was clean 😎","Abel gaat voor de W 🏆",
+"LEKKER BEZIG 💥","Dat was gratis XP 😂","Sprach-Brawler unlocked 🧠⚡",
+"BOEM. Helemaal raak.","Die Duitsers kunnen trots zijn 😭🔥"
+];
+
+let mode="mix", current=null, xp=0, streak=0, score=0, answered=0;
+const $=id=>document.getElementById(id);
+function norm(s){
+ return s.toLowerCase().trim().replaceAll("ß","ss").replace(/[.,!?;:]/g,"").replace(/\s+/g," ");
+}
+function pool(){
+ if(mode==="numbers") return nums;
+ return mode==="mix" ? vocab : vocab;
+}
+function next(){
+ const arr=pool();
+ const item=arr[Math.floor(Math.random()*arr.length)];
+ let dir;
+ if(mode==="mix") dir=Math.random()<.5?"de":"nl";
+ else if(mode==="de") dir="de"; else if(mode==="nl") dir="nl"; else dir=Math.random()<.5?"de":"nl";
+ current={de:item[0],nl:item[1],dir};
+ $("word").textContent=dir==="de"?item[0]:item[1];
+ $("direction").textContent=dir==="de"?"Duits → Nederlands":"Nederlands → Duits";
+ $("answer").value=""; $("feedback").textContent=""; $("feedback").className="";
+ $("answer").focus();
+ $("bar").style.width=(Math.round(answered/(mode==="numbers"?nums.length:vocab.length)*100)%101)+"%";
+}
+function expected(){return current.dir==="de"?current.nl:current.de}
+function check(){
+ if(!current)return;
+ const a=norm($("answer").value), e=norm(expected());
+ if(!a)return;
+ answered++;
+ if(a===e){
+   score++; streak++; xp+=10+Math.min(streak,10);
+   $("feedback").textContent=goodLines[Math.floor(Math.random()*goodLines.length)]+"  +"+(10+Math.min(streak,10))+" XP";
+   $("feedback").className="good";
+   $("xp").textContent=xp; $("streak").textContent=streak; $("score").textContent=score;
+   $("level").textContent=Math.floor(xp/100)+1;
+   setTimeout(next,700);
+ }else{
+   streak=0; xp=Math.max(0,xp-2);
+   $("feedback").innerHTML="DAT IS ECHT SKEER 😭💀<br><span style='font-size:16px'>Goed antwoord: <b>"+expected()+"</b></span>";
+   $("feedback").className="bad";
+   $("streak").textContent=streak; $("xp").textContent=xp;
+ }
+}
+$("check").onclick=check;
+$("skip").onclick=()=>{streak=0;$("streak").textContent=0;$("feedback").textContent="SKIPPA 😭 volgende!";setTimeout(next,350)};
+$("answer").addEventListener("keydown",e=>{if(e.key==="Enter")check()});
+document.querySelectorAll(".mode").forEach(b=>b.onclick=()=>{
+ document.querySelectorAll(".mode").forEach(x=>x.classList.remove("active"));
+ b.classList.add("active"); mode=b.dataset.mode; answered=0; next();
+});
+next();
+</script>
+</body>
+</html>
